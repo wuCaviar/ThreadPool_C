@@ -1,4 +1,7 @@
 #include <stdio.h>
+#include <pthread.h>
+#include <unistd.h>
+#include <stdlib.h>
 #include "threadpool.h"
 
 void taskFunc(void* arg){
@@ -6,7 +9,6 @@ void taskFunc(void* arg){
     printf("thread %ld is working, number = %d\n", pthread_self(), num);
     usleep(1000); // 休眠1000us，模拟任务执行时长
 }
-
 
 int main(){
     // 创建线程池
