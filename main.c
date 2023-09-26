@@ -7,7 +7,7 @@
 void taskFunc(void* arg){
     int num = *(int*)arg; // 任务函数中的参数是一个int型的指针，所以要先转换成int型的指针，再取值
     printf("thread %ld is working, number = %d\n", pthread_self(), num);
-    usleep(1000); // 休眠1000us，模拟任务执行时长
+    sleep(1); // 休眠1s，模拟任务执行时长
 }
 
 int main(){

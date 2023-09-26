@@ -110,14 +110,15 @@ int threadPoolDestroy(ThreadPool* pool){
     // 释放堆空间
     if (pool->taskQ) free(pool->taskQ);         // 释放任务队列
     if (pool->threadIDs) free(pool->threadIDs); // 释放工作线程ID数组
-    free(pool);                                 // 释放线程池
 
     pthread_mutex_destroy(&(pool->mutexPool));  // 销毁锁
     pthread_mutex_destroy(&(pool->mutexBusy)); 
     pthread_cond_destroy(&(pool->notEmpty));    // 销毁条件变量
     pthread_cond_destroy(&(pool->notFull));    
 
+    free(pool);                                 // 释放线程池
     pool = NULL;                                // 线程池指针置空
+    
     return 0;
 }
 
