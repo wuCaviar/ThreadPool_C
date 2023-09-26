@@ -13,17 +13,39 @@ typedef struct ThreadPool ThreadPool; //前置声明
     */
 ThreadPool* threadPoolCreate(int min, int max, int queueSize);
 
-// 销毁线程池
+/*
+    * @function: threadPoolDestroy
+    * @desc: 销毁线程池
+    * @param pool: 线程池地址
+    * @return: 成功返回0，失败返回-1
+    */
+int threadPoolDestroy(ThreadPool* pool);
 
+/*
+    * @function: threadPoolAdd
+    * @desc: 向线程池中添加任务
+    * @param pool: 线程池地址
+    * @param func: 任务函数
+    * @param arg: 任务函数参数
+    * @return: 成功返回0，失败返回-1
+    */
+void threadPoolAdd(ThreadPool* pool, void(*func)(void*), void* arg);
 
-// 向线程池中添加任务
+/*
+    * @function: threadPoolBusyNum
+    * @desc: 获取线程池中工作的线程的个数
+    * @param pool: 线程池地址
+    * @return: 成功返回线程池中工作的线程的个数，失败返回-1
+    */
+int threadPoolBusyNum(ThreadPool* pool);
 
-
-// 获取线程池中工作的线程的个数
-
-
-// 获取线程池中活着的线程的个数
-
+/*
+    * @function: threadPoolAliveNum
+    * @desc: 获取线程池中活着的线程的个数
+    * @param pool: 线程池地址
+    * @return: 成功返回线程池中活着的线程的个数，失败返回-1
+    */
+int threadPoolAliveNum(ThreadPool* pool);
 
 /*
     * @function: worker
