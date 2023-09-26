@@ -1,7 +1,7 @@
 #ifndef _THREADPOOL_H_
 #define _THREADPOOL_H_
 
-typedef struct ThreadPool ThreadPool;
+typedef struct ThreadPool ThreadPool; //前置声明
 
 /*
     * @function: threadPoolCreate
