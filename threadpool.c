@@ -92,6 +92,67 @@ ThreadPool* threadPoolCreate(int min, int max, int queueSize){
     return NULL;
 }
 
+int threadPoolDestroy(ThreadPool* pool){
+    if (pool == NULL) return -1;                // 线程池不存在，销毁失败
+    
+    pool->shutdown = 1;                         // 关闭线程池
+    pthread_join(pool->managerID, NULL);        // 阻塞回收管理者线程
+
+    // 唤醒阻塞的工作线程
+    for (int i = 0; i < pool->liveNum; ++i){
+        pthread_cond_broadcast(&(pool->notEmpty));
+    }
+
+    // 释放堆空间
+    if (pool->taskQ) free(pool->taskQ);         // 释放任务队列
+    if (pool->threadIDs) free(pool->threadIDs); // 释放工作线程ID数组
+    free(pool);                                 // 释放线程池
+
+    pthread_mutex_destroy(&(pool->mutexPool));  // 销毁锁
+    pthread_mutex_destroy(&(pool->mutexBusy)); 
+    pthread_cond_destroy(&(pool->notEmpty));    // 销毁条件变量
+    pthread_cond_destroy(&(pool->notFull));    
+
+    pool = NULL;                                // 线程池指针置空
+    return 0;
+}
+
+void threadPoolAdd(ThreadPool *pool, void (*func)(void *), void *arg){
+    pthread_mutex_lock(&(pool->mutexPool)); // 给线程池加锁
+    while (pool->queueSize == pool->queueCapacity && !pool->shutdown){
+        // 任务队列满，阻塞生产者线程
+        pthread_cond_wait(&(pool->notFull), &(pool->mutexPool)); //参数1:条件变量 参数2:互斥锁
+    }
+    if (pool->shutdown){
+        pthread_mutex_unlock(&(pool->mutexPool)); // 给线程池解锁
+        return;
+    }
+    
+    // 添加任务
+    pool->taskQ[pool->queueRear].function = func; // 在队尾添加任务函数
+    pool->taskQ[pool->queueRear].arg = arg;       // 在队尾添加任务函数的参数
+    pool->queueRear = (pool->queueRear + 1) % pool->queueCapacity; // 移动队尾
+    pool->queueSize++; // 任务队列中实际任务数加1
+
+    // 唤醒工作线程
+    pthread_cond_signal(&(pool->notEmpty));     // 唤醒工作线程
+    pthread_mutex_unlock(&(pool->mutexPool));   // 给线程池解锁
+}
+
+int threadPoolBusyNum(ThreadPool *pool){
+    pthread_mutex_lock(&(pool->mutexBusy));     // 给busyNum加锁
+    int busyNum = pool->busyNum;                // 获取忙线程数
+    pthread_mutex_unlock(&(pool->mutexBusy));   // 给busyNum解锁
+    return busyNum;
+}
+
+int threadPoolAliveNum(ThreadPool *pool){
+    pthread_mutex_lock(&(pool->mutexPool));     // 给线程池加锁
+    int liveNum = pool->liveNum;                // 获取存活线程数
+    pthread_mutex_unlock(&(pool->mutexPool));   // 给线程池解锁
+    return liveNum;
+}
+
 void *worker(void *arg){
     ThreadPool *pool = (ThreadPool *)arg;       // 获取线程池地址
 
@@ -129,6 +190,7 @@ void *worker(void *arg){
         pool->queueFront = (pool->queueFront + 1) % pool->queueCapacity; // 移动队头 循环取任务
         pool->queueSize--;                                               // 任务队列中实际任务数减1
 
+        pthread_cond_signal(&(pool->notFull));      // 唤醒生产者线程
         pthread_mutex_unlock(&(pool->mutexPool));   // 给线程池解锁
 
         printf("thread %ld start working...\n", pthread_self());    //开始工作
