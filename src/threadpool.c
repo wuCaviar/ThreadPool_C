@@ -1,4 +1,8 @@
 #include <pthread.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <unistd.h>
+#include <string.h>
 #include "threadpool.h"
 
 const int NUMBER = 2;               // 线程池中线程的个数
@@ -240,7 +244,7 @@ void *manager(void *arg){
             && pool->liveNum < pool->maxNum;        // 存活线程数 < 最大线程数
             ++i){
                 if (pool->threadIDs[i] == 0){
-                    pthread_create(pool->threadIDs[i], NULL, worker, pool); // 创建工作线程
+                    pthread_create(&pool->threadIDs[i], NULL, worker, pool); // 创建工作线程
                     counter++;                      // 成功创建的线程个数加1
                     pool->liveNum++;                // 存活线程数加1
                 }
