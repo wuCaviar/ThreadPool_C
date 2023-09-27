@@ -262,17 +262,6 @@ void *manager(void *arg){
             // 让工作的线程自杀 666
             for (int i = 0; i < NUMBER; ++i){
                 pthread_cond_signal(&(pool->notEmpty)); // 唤醒工作线程
-
-                // 判断是否要销毁线程
-                if (pool->exitNum > 0){
-                    pool->exitNum--; // 要销毁的线程数减1
-                    pthread_mutex_unlock(&(pool->mutexPool)); // 给线程池解锁
-                    threadExit(pool);
-
-                    // 为什么不用pthread_join()?
-                    // 因为pthread_join()会阻塞，而且只能阻塞一个线程
-                    // 所以这里用pthread_exit()来自杀线程
-                }
             }
         }
     }
